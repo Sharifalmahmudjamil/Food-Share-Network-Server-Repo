@@ -31,7 +31,8 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const foodCollection= client.db('foodDB').collection('food')
+    const foodCollection= client.db('foodDB').collection('food');
+    const requestFoodCollection=client.db('foodDB').collection('requestFood');
 
 
     app.get('/addFood',async(req,res)=>{
@@ -60,6 +61,21 @@ async function run() {
         res.send(result);
     })
 
+    // request section
+    app.get('/requestFood',async(req,res)=>{
+      const cursor= requestFoodCollection.find();
+      const result=await cursor.toArray();
+      res.send(result);
+    })
+
+
+
+    app.post('/requestFood',async(req,res)=>{
+      const singleFood=req.body;
+      console.log(singleFood);
+      const result=await requestFoodCollection.insertOne(singleFood);
+      res.send(result);
+    })
 
 
     // Send a ping to confirm a successful connection
