@@ -90,7 +90,7 @@ async function run() {
       res.send(result);
      
     })
-  //  {name,photo,quantity,location,date,notes
+  
 
     // request section
     app.get('/requestFood',async(req,res)=>{
@@ -99,7 +99,12 @@ async function run() {
       res.send(result);
     })
 
-
+    app.get('/requestFood/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query= {_id: new ObjectId(id)};
+      const result= await requestFoodCollection.findOne(query);
+      res.send(result);
+    })
 
     app.post('/requestFood',async(req,res)=>{
       const singleFood=req.body;
