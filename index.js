@@ -44,6 +44,17 @@ const logger=(req,res,next)=>{
 //   if(!token){
 //     return(res.status(401).send({message:'not Authorized'}))
 //   }
+//   jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
+//     // error
+//     if(err){
+//       console.log(err);
+//       return res.status(401).send({massage: 'unauthorized'})
+//     }
+//     // if token is valid then it would be decoded
+//     console.log('value in the token', decoded);
+//     req.user= decoded;
+//     next()
+//   })
 // }
 
 
@@ -137,8 +148,7 @@ async function run() {
 
     // request section
     app.get('/requestFood',async(req,res)=>{
-      const cursor= requestFoodCollection.find();
-      const result=await cursor.toArray();
+       const result=await requestFoodCollection.find().toArray();
       res.send(result);
     })
 
@@ -153,6 +163,13 @@ async function run() {
       const singleFood=req.body;
       console.log(singleFood);
       const result=await requestFoodCollection.insertOne(singleFood);
+      res.send(result);
+    })
+
+    app.delete('/requestFood/:id',async(req,res)=>{
+      const id  = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result= await requestFoodCollection.deleteOne(query);
       res.send(result);
     })
 
