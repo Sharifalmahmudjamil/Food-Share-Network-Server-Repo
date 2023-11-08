@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const cookieParser=require('cookie-parser')
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app= express();
@@ -7,8 +9,12 @@ const port = process.env.PORT || 5000;
 
 
 // middleware
-app.use(cors());
+app.use(cors({
+  origin:['http://localhost:5173'],
+  credentials:true
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 
 
@@ -26,6 +32,22 @@ const client = new MongoClient(uri, {
   }
 });
 
+// middleware
+const logger=(req,res,next)=>{
+  console.log( "called",req.host,req.originalUrl);
+  next();
+}
+
+// const verifyToken=(req,res,next)=>{
+//   const token = req.cookies?.token;
+//   console.log('value of token',token);
+//   if(!token){
+//     return(res.status(401).send({message:'not Authorized'}))
+//   }
+// }
+
+
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -34,20 +56,41 @@ async function run() {
     const foodCollection= client.db('foodDB').collection('food');
     const requestFoodCollection=client.db('foodDB').collection('requestFood');
 
+    // auth related api
+    app.post('/jwt', logger,async(req,res)=>{
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:'1h'})
+      res
+      .cookie('token',token,{
+        httpOnly:true,
+        secure:false,
+        
+      })
+      .send({success:true});
 
-    app.get('/addFood',async(req,res)=>{
+    })
+
+    app.post('/logout',async(req,res)=>{
+      const user = req.body;
+      console.log("log out",user);
+      res.clearCookie('token',{maxAge:0}).send({success:true});
+    })
+
+    app.get('/addFood',logger,async(req,res)=>{
       const cursor= foodCollection.find().sort({quantity : -1});
+      
       const result = await cursor.toArray();
       res.send(result);
     })
 
-    app.get('/availableFood/sort',async(req,res)=>{
+    app.get('/availableFood/sort',logger,async(req,res)=>{
       const cursor=foodCollection.find().sort({date:1});
       const result= await cursor.toArray();
       res.send(result);
     })
 
-    app.get('/addFood/:id',async(req,res)=>{
+    app.get('/addFood/:id',logger,async(req,res)=>{
       const id= req.params.id;
       const query= {_id: new ObjectId(id)};
       const result= await foodCollection.findOne(query);
