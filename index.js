@@ -10,7 +10,12 @@ const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors({
-  origin:['http://localhost:5173'],
+  origin:[
+    // 'http://localhost:5173'
+    "https://food-share-network-460e6.web.app",
+    "https://food-share-network-460e6.firebaseapp.com/"
+   
+  ],
   credentials:true
 }));
 app.use(express.json());
@@ -165,6 +170,20 @@ async function run() {
       const result=await requestFoodCollection.insertOne(singleFood);
       res.send(result);
     })
+
+      app.patch('/requestFood/:id',async(req,res)=>{
+        const id= req.params.id;
+        const filter= {_id: new ObjectId(id)}
+        const updateStatus=req.body;
+        console.log(updateStatus);
+        const updateDoc={
+          $set: {
+            status: updateStatus.status
+          },
+        };
+        const result= await requestFoodCollection.updateOne(filter,updateDoc);
+        res.send(result);
+      })
 
     app.delete('/requestFood/:id',async(req,res)=>{
       const id  = req.params.id;
